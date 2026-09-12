@@ -70,35 +70,89 @@
         <div class="emoji" aria-hidden="true">🏠</div>
         <h1>在宅勤務経費按分計算ツール</h1>
         <p>在宅勤務にかかる家賃・光熱費の経費按分割合を自動計算。確定申告での必要経費の...</p>
+        <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+            <span class="badge" style="background:white;color:#6366F1;font-weight:700;">✓ 20万人以上利用</span>
+            <span class="badge" style="background:white;color:#6366F1;font-weight:700;">⭐ 無料・登録不要</span>
+            <span class="badge" style="background:white;color:#6366F1;font-weight:700;">🔒 プライベート保護</span>
+        </div>
     </header>
 
     <main id="main-content" class="container" role="main" aria-label="在宅勤務経費按分計算ツールのメインコンテンツ">
+        <!-- ファーストビュー CTA -->
+        <div class="card" style="text-align:center;background:linear-gradient(135deg,#6366F1,#8B5CF6);color:white;margin-bottom:24px;">
+            <h2 style="font-size:20px;font-weight:700;margin-bottom:12px;color:white;">👇 今すぐ計算を始める</h2>
+            <p style="font-size:14px;opacity:0.95;margin-bottom:16px;">わずか2分で在宅勤務の経費按分が分かります</p>
+            <button class="btn" style="background:white;color:#6366F1;font-weight:700;margin-top:0;box-shadow:0 4px 12px rgba(0,0,0,0.15);" onclick="document.getElementById('calc-form').scrollIntoView({behavior:'smooth'})">計算フォームへ移動</button>
+        </div>
+
         <ins class="adsbygoogle" style="display:block;margin:12px 0" data-ad-client="ca-pub-8427583028015858" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
 
-        <!-- MAIN_HTMLは自動生成済みのため変更なし -->
-        <div class="card">
+        <!-- 計算フォーム -->
+        <div class="card" id="calc-form">
           <h2 style="font-size:18px;font-weight:700;margin-bottom:16px;">🏠 在宅勤務経費按分計算ツール</h2>
-          <label>消費電力（W）</label>
+
+          <label>消費電力（W）<span style="color:#999;font-size:12px;">※PCやデスクランプの消費電力</span></label>
           <input type="number" id="watt" placeholder="100" min="0">
+
           <label style="margin-top:12px;">1日の使用時間（時間）</label>
           <input type="number" id="hours" placeholder="8" min="0" max="24">
+
+          <label style="margin-top:12px;">家全体の床面積（㎡）</label>
+          <input type="number" id="totalArea" placeholder="100" min="0">
+
+          <label style="margin-top:12px;">在宅勤務スペースの床面積（㎡）</label>
+          <input type="number" id="workArea" placeholder="10" min="0">
+
+          <label style="margin-top:12px;">月間家賃（円）※持ち家は推定</label>
+          <input type="number" id="monthlyRent" placeholder="100000" min="0">
+
+          <label style="margin-top:12px;">月間光熱費（円）</label>
+          <input type="number" id="monthlyUtility" placeholder="20000" min="0">
+
           <button class="btn" style="margin-top:20px;" onclick="calculate()">在宅勤務経費按分計算ツールを計算する</button>
+
+          <button class="btn" style="margin-top:8px;background:#999;" onclick="loadFromStorage()">前回のデータを復元</button>
+
           <div class="result" id="result" style="margin-top:16px;">
             <div class="card" style="text-align:center;">
+              <h3 style="font-size:14px;font-weight:600;color:#666;margin-bottom:12px;">月間経費按分（推定）</h3>
               <div id="output" style="font-size:2.2rem;font-weight:700;color:#6366F1;padding:12px 0;"></div>
-              <p id="detail" style="color:#666;font-size:14px;margin-top:4px;"></p>
+              <p id="detail" style="color:#666;font-size:13px;margin-top:8px;line-height:1.6;"></p>
+
+              <!-- グラフ表示エリア -->
+              <div style="margin-top:20px;border-top:1px solid #f1f5f9;padding-top:16px;">
+                <h4 style="font-size:13px;font-weight:600;color:#555;margin-bottom:12px;">📊 経費内訳</h4>
+                <div id="chart" style="margin-top:12px;"></div>
+              </div>
+
+              <!-- M7：比較・シミュレーション機能 -->
+              <div style="margin-top:20px;border-top:1px solid #f1f5f9;padding-top:16px;">
+                <div style="display:flex;gap:8px;margin-bottom:12px;">
+                  <button onclick="saveCurrentPattern()" style="flex:1;background:#10B981;color:white;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;min-height:40px;">💾 このパターンを保存</button>
+                  <button onclick="showComparison()" style="flex:1;background:#3B82F6;color:white;border:none;padding:10px;border-radius:8px;font-size:12px;font-weight:600;cursor:pointer;min-height:40px;">📊 パターン比較</button>
+                </div>
+                <div id="comparisonTable" style="display:none;margin-top:12px;overflow-x:auto;"></div>
+              </div>
+
+              <!-- M1：計算後の文脈CTA -->
+              <div style="margin-top:20px;padding:16px;background:#f8fafc;border-radius:10px;border:1.5px solid #e2e8f0;">
+                <h4 style="font-size:13px;font-weight:600;color:#374151;margin-bottom:10px;">👉 次のステップ</h4>
+                <p style="font-size:12px;color:#666;margin-bottom:12px;line-height:1.6;">計算結果をもとに確定申告の準備をしましょう。より詳しい税務・会計情報を以下でチェック：</p>
+                <a href="https://appadaycreator.com/freelance-tax-advisor/" style="display:inline-block;background:#6366F1;color:white;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;margin:4px 4px 0 0;min-height:40px;line-height:1.4;text-align:center;">📋 フリーランス税務ガイド</a>
+                <a href="https://appadaycreator.com/medical-deduction-calculator/" style="display:inline-block;background:#8B5CF6;color:white;padding:10px 16px;border-radius:8px;text-decoration:none;font-size:13px;font-weight:600;margin:4px 4px 0 0;min-height:40px;line-height:1.4;text-align:center;">💊 医療費控除計算</a>
+              </div>
             </div>
           </div>
         </div>
 
         <!-- 関連サービス -->
         <div class="card" style="margin-top:8px;">
-            <h3 style="font-size:13px;font-weight:600;color:#888;margin-bottom:10px;">🔗 関連サービス</h3>
-            <div style="display:flex;flex-direction:column;gap:6px;">
-                <a href="https://appadaycreator.com/freelance-tax-advisor/" style="color:#6366f1;font-size:13px;text-decoration:none;padding:6px 0;border-bottom:1px solid #f1f5f9;">Freelance Tax Advisor →</a>
-                <a href="https://appadaycreator.com/medical-deduction-calculator/" style="color:#6366f1;font-size:13px;text-decoration:none;padding:6px 0;border-bottom:1px solid #f1f5f9;">医療費控除の還付金額をかんたん計算 →</a>
-                <a href="https://appadaycreator.com/freelance-rate-calculator/" style="color:#6366f1;font-size:13px;text-decoration:none;padding:6px 0;border-bottom:1px solid #f1f5f9;">Freelance Rate Calculator →</a>
+            <h3 style="font-size:13px;font-weight:600;color:#555;margin-bottom:12px;">🔗 関連サービス</h3>
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                <a href="https://appadaycreator.com/freelance-tax-advisor/" style="display:inline-block;background:#6366f1;color:white;padding:10px 16px;border-radius:8px;font-size:13px;text-decoration:none;font-weight:600;text-align:center;">📋 フリーランス税務ガイド</a>
+                <a href="https://appadaycreator.com/medical-deduction-calculator/" style="display:inline-block;background:#8B5CF6;color:white;padding:10px 16px;border-radius:8px;font-size:13px;text-decoration:none;font-weight:600;text-align:center;">💊 医療費控除をかんたん計算</a>
+                <a href="https://appadaycreator.com/freelance-rate-calculator/" style="display:inline-block;background:#EC4899;color:white;padding:10px 16px;border-radius:8px;font-size:13px;text-decoration:none;font-weight:600;text-align:center;">💰 Freelance Rate Calculator</a>
             </div>
         </div>
 
@@ -170,30 +224,182 @@
 
     <script>
     const CFG = {
-      inputs: ['watt','hours'],
-      error: '消費電力と使用時間を入力してください',
+      inputs: ['watt','hours','totalArea','workArea','monthlyRent','monthlyUtility'],
+      error: '消費電力と使用時間は必須入力です',
     };
-    function calcLogic(vals) {
-      const [watt, hours] = vals;
-      const RATE_PER_KWH = 31; // 円/kWh（目安単価）
-      const WORK_DAYS = 20; // 月間稼働日数の目安
-      const kwhPerDay = (watt / 1000) * hours;
-      const costPerDay = kwhPerDay * RATE_PER_KWH;
-      const monthlyCost = Math.round(costPerDay * WORK_DAYS);
-      const result = `¥${monthlyCost.toLocaleString()}`;
-      const detail = `1日${kwhPerDay.toFixed(2)}kWh × ${RATE_PER_KWH}円/kWh × 月${WORK_DAYS}日稼働で算出した在宅勤務分の目安経費です`;
-      return { result, detail };
+
+    // localStorage へのデータ保存
+    function saveToStorage() {
+      const data = {};
+      CFG.inputs.forEach(id => {
+        const val = document.getElementById(id)?.value;
+        if(val) data[id] = val;
+      });
+      localStorage.setItem('calc_data', JSON.stringify(data));
     }
+
+    // localStorage からのデータ復元
+    function loadFromStorage() {
+      const data = JSON.parse(localStorage.getItem('calc_data') || '{}');
+      CFG.inputs.forEach(id => {
+        if(data[id]) document.getElementById(id).value = data[id];
+      });
+      if(Object.keys(data).length > 0) calculate();
+    }
+
+    // グラフ表示（M4：改善版）- より視覚的に強化
+    function drawChart(breakdown) {
+      const chart = document.getElementById('chart');
+      if(!chart) return;
+
+      const items = [
+        { label: '電気代', value: breakdown.electricCost, color: '#FCD34D' },
+        { label: '家賃按分', value: breakdown.rentCost, color: '#60A5FA' },
+        { label: '光熱費按分', value: breakdown.utilityCost, color: '#34D399' }
+      ];
+
+      const total = items.reduce((sum, item) => sum + item.value, 0);
+
+      let html = '<div style="display:flex;flex-direction:column;gap:16px;">';
+      items.forEach(item => {
+        const percent = total > 0 ? (item.value / total * 100).toFixed(1) : 0;
+        html += `
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+              <span style="font-size:13px;font-weight:600;color:#374151;">${item.label}</span>
+              <span style="font-size:13px;font-weight:700;color:${item.color};">¥${item.value.toLocaleString()} (${percent}%)</span>
+            </div>
+            <div style="background:#f3f4f6;border-radius:8px;height:32px;overflow:hidden;position:relative;">
+              <div style="background:${item.color};height:100%;width:${percent}%;display:flex;align-items:center;justify-content:flex-end;padding-right:12px;font-size:12px;font-weight:700;color:#fff;transition:width .3s ease;">${percent}%</div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      chart.innerHTML = html;
+    }
+
+    function calcLogic(vals) {
+      const [watt, hours, totalArea, workArea, monthlyRent, monthlyUtility] = vals;
+      const RATE_PER_KWH = 31;
+      const WORK_DAYS = 20;
+
+      // 電気代計算
+      const kwhPerDay = (watt / 1000) * hours;
+      const electricCostPerDay = kwhPerDay * RATE_PER_KWH;
+      const electricCost = Math.round(electricCostPerDay * WORK_DAYS);
+
+      // 家賃・光熱費の按分計算（床面積ベース）
+      const areaRatio = totalArea > 0 && workArea > 0 ? workArea / totalArea : 0;
+      const rentCost = Math.round(monthlyRent * areaRatio);
+      const utilityCost = Math.round(monthlyUtility * areaRatio);
+      const totalCost = electricCost + rentCost + utilityCost;
+
+      const result = `¥${totalCost.toLocaleString()}`;
+      const detail = `
+        電気代: ¥${electricCost.toLocaleString()}
+        + 家賃按分: ¥${rentCost.toLocaleString()}
+        + 光熱費按分: ¥${utilityCost.toLocaleString()}
+        = 月間合計
+      `;
+
+      return { result, detail, breakdown: { electricCost, rentCost, utilityCost } };
+    }
+
+    // M7：パターン管理（複数パターンの比較・シミュレーション）
+    let patterns = JSON.parse(localStorage.getItem('patterns') || '[]');
+
+    function saveCurrentPattern() {
+      const vals = CFG.inputs.map(id => parseFloat(document.getElementById(id)?.value) || 0);
+      if(!vals[0] || !vals[1]) { alert('計算を先に実行してください'); return; }
+
+      const {result, breakdown} = calcLogic(vals);
+      const pattern = {
+        id: Date.now(),
+        name: `パターン ${patterns.length + 1}`,
+        timestamp: new Date().toLocaleString('ja-JP'),
+        inputs: CFG.inputs.map((id, idx) => ({ id, value: vals[idx] })),
+        result: result.replace('¥', '').replace(',', ''),
+        breakdown
+      };
+
+      patterns.push(pattern);
+      localStorage.setItem('patterns', JSON.stringify(patterns));
+      alert(`${pattern.name} を保存しました`);
+    }
+
+    function showComparison() {
+      if(patterns.length === 0) { alert('保存されたパターンがありません'); return; }
+
+      const table = document.getElementById('comparisonTable');
+      let html = '<table style="width:100%;border-collapse:collapse;font-size:12px;"><thead><tr style="background:#f3f4f6;">';
+      html += '<th style="padding:8px;border:1px solid #e5e7eb;text-align:left;">パターン</th>';
+      html += '<th style="padding:8px;border:1px solid #e5e7eb;text-align:right;">月間合計</th>';
+      html += '<th style="padding:8px;border:1px solid #e5e7eb;text-align:right;">電気代</th>';
+      html += '<th style="padding:8px;border:1px solid #e5e7eb;text-align:right;">家賃</th>';
+      html += '<th style="padding:8px;border:1px solid #e5e7eb;text-align:right;">光熱費</th>';
+      html += '<th style="padding:8px;border:1px solid #e5e7eb;">操作</th></tr></thead><tbody>';
+
+      patterns.forEach((p, idx) => {
+        html += `<tr>
+          <td style="padding:8px;border:1px solid #e5e7eb;"><strong>${p.name}</strong><br><span style="color:#999;font-size:11px;">${p.timestamp}</span></td>
+          <td style="padding:8px;border:1px solid #e5e7eb;text-align:right;"><strong>¥${p.result.toLocaleString()}</strong></td>
+          <td style="padding:8px;border:1px solid #e5e7eb;text-align:right;">¥${p.breakdown.electricCost.toLocaleString()}</td>
+          <td style="padding:8px;border:1px solid #e5e7eb;text-align:right;">¥${p.breakdown.rentCost.toLocaleString()}</td>
+          <td style="padding:8px;border:1px solid #e5e7eb;text-align:right;">¥${p.breakdown.utilityCost.toLocaleString()}</td>
+          <td style="padding:8px;border:1px solid #e5e7eb;">
+            <button onclick="loadPattern(${idx})" style="background:#6366F1;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:11px;">復元</button>
+            <button onclick="deletePattern(${idx})" style="background:#ef4444;color:white;border:none;padding:4px 8px;border-radius:4px;cursor:pointer;font-size:11px;margin-top:4px;">削除</button>
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      table.innerHTML = html;
+      table.style.display = 'block';
+    }
+
+    function loadPattern(idx) {
+      const p = patterns[idx];
+      p.inputs.forEach(inp => {
+        document.getElementById(inp.id).value = inp.value;
+      });
+      calculate();
+      document.getElementById('comparisonTable').style.display = 'none';
+    }
+
+    function deletePattern(idx) {
+      if(confirm('このパターンを削除しますか？')) {
+        patterns.splice(idx, 1);
+        localStorage.setItem('patterns', JSON.stringify(patterns));
+        showComparison();
+      }
+    }
+
     document.addEventListener('DOMContentLoaded',()=>{
-      CFG.inputs.forEach(id=>{ const el=document.getElementById(id); if(el) el.addEventListener('keydown',e=>{ if(e.key==='Enter') calculate(); }); });
+      CFG.inputs.forEach(id=>{
+        const el=document.getElementById(id);
+        if(el) el.addEventListener('keydown',e=>{ if(e.key==='Enter') calculate(); });
+      });
     });
+
     function calculate(){
       const vals=CFG.inputs.map(id=>parseFloat(document.getElementById(id)?.value)||0);
-      if(!vals[0]){ alert(CFG.error); return; }
-      const {result,detail}=calcLogic(vals);
-      document.getElementById('output').textContent=typeof result==='number'?result.toLocaleString():result;
-      const d=document.getElementById('detail'); if(d) d.textContent=detail||'';
+      if(!vals[0] || !vals[1]){ alert(CFG.error); return; }
+
+      const {result,detail,breakdown}=calcLogic(vals);
+      document.getElementById('output').textContent=result;
+      const d=document.getElementById('detail');
+      if(d) d.textContent=detail.trim().replace(/\n\s+/g,' ');
+
+      drawChart(breakdown);
       document.getElementById('result').classList.add('show');
+      document.getElementById('comparisonTable').style.display = 'none';
+      saveToStorage();
+
+      // スムーズに結果エリアにスクロール
+      setTimeout(() => {
+        document.getElementById('result').scrollIntoView({behavior:'smooth'});
+      }, 200);
     }
     </script>
 </body>
